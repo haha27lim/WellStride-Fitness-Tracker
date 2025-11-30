@@ -22,10 +22,10 @@ const LoginPage = () => {
     };
 
     React.useEffect(() => {
-        if (isAuthenticated) {
+        if (isAuthenticated && status !== 'loading') {
             navigate('/dashboard');
         }
-    }, [isAuthenticated, navigate]);
+    }, [isAuthenticated, status, navigate]);
 
     const handleGoogleLogin = () => {
         window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/google`;
