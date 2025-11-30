@@ -73,7 +73,9 @@ public class WebSecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5173"));
+                "http://localhost:5173",
+                    "https://wellstride-fitness-tracker.vercel.app",
+                    "https://wellstride-fitness-tracker.onrender.com"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration
                 .setAllowedHeaders(
@@ -103,7 +105,6 @@ public class WebSecurityConfig {
                         .permitAll()
                         .requestMatchers("/api/csrf-token").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
-                        .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated())
                 .headers(headers -> headers
