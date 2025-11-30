@@ -1,3 +1,5 @@
+const BACKEND_URL = process.env.VITE_API_URL || 'http://localhost:8080';
+
 const getToken = () => {
   try {
     const userStr = localStorage.getItem('user');
@@ -36,6 +38,9 @@ export const debugToken = () => {
 
 
 export const request = async (url, options = {}) => {
+
+  const fullUrl = url.startsWith('http') ? url : `${BACKEND_URL}${url}`;
+
   try {
     const token = getToken();
     const headers = {
