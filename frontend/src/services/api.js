@@ -35,23 +35,31 @@ api.interceptors.request.use(
 
 
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
 
-    console.error('API Error:', 
-      error.config?.url,
-      error.response?.status,
-      error.response?.data || error.message
-    );
+    console.error('API Error:', error?.config?.url, error?.response?.status, error?.response?.data || error?.message);
+
+    const status = error?.response?.status;
+    const requestUrl = error?.config?.url || '';
     
 
-    if (error.response && error.response.status === 401) {
+    const authPathsToSkip = [
+      '/api/auth/signin',
+      '/api/auth/signup',
+      '/api/auth/forgot-password',
+      '/api/auth/reset-password',
+      '/oauth2/authorization',
+      '/oauth2/redirect'
+    ];
+    const shouldSkipRedirect = authPathsToSkip.some(p => requestUrl.includes(p));
+
+    if (status === 401 && !shouldSkipRedirect) {
       console.log('Authentication expired, redirecting to login...');
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+
     return Promise.reject(error);
   }
 );
