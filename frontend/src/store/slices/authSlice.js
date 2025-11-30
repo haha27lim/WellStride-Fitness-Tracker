@@ -69,6 +69,10 @@ const authSlice = createSlice({
       if (state.user) {
         state.user.isAdmin = action.payload;
       }
+    },
+    clearError: (state) => {
+      state.error = null;
+      state.status = "idle";
     }
   },
   extraReducers: (builder) => {
@@ -114,5 +118,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, setAdmin } = authSlice.actions;
+export const { setUser, setAdmin, clearError } = authSlice.actions;
 export default authSlice.reducer;

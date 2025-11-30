@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/hooks/redux';
-import { register } from '@/store/slices/authSlice';
+import { register, clearError } from '@/store/slices/authSlice';
 import '../styles/components/Register.css';
 
 
@@ -43,6 +43,11 @@ const RegisterPage = () => {
 
             });
     };
+
+    React.useEffect(() => {
+        dispatch(clearError());
+        return () => dispatch(clearError());
+    }, [dispatch]);
 
     React.useEffect(() => {
         if (isAuthenticated) {
