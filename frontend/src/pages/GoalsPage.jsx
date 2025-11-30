@@ -32,10 +32,11 @@ const GoalsPage = () => {
         
         try { 
             const fetchedGoals = await apiDirect.get('/api/goals');
-            setGoals(fetchedGoals);
+            setGoals(Array.isArray(fetchedGoals) ? fetchedGoals : fetchedGoals?.data || []);
         } catch (err) {
             console.error('Error fetching goals:', err);
             setError('Failed to fetch goals. Try again later.');
+            setGoals([]);
         } finally {
             setLoading(false);
         }

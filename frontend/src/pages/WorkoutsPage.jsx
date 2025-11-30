@@ -32,10 +32,11 @@ const WorkoutsPage = () => {
 
         try {
             const fetchedWorkouts = await apiDirect.get('/api/workouts');
-            setWorkouts(fetchedWorkouts);
+            setWorkouts(Array.isArray(fetchedWorkouts) ? fetchedWorkouts : fetchedWorkouts?.data || []);
         } catch (err) {
             console.error('Error fetching workouts:', err);
             setError('Failed to fetch workouts. Try again later.');
+            setWorkouts([]); 
         } finally {
             setLoading(false);
         }
