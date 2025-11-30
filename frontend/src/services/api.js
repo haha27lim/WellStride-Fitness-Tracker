@@ -18,15 +18,8 @@ api.interceptors.request.use(
         const user = JSON.parse(userStr);
         
         if (user && user.token) {
-
           const token = user.token.startsWith('Bearer ') ? user.token : `Bearer ${user.token}`;
-          
-
           config.headers['Authorization'] = token;
-          
-
-          config.headers['X-Auth-Token'] = user.token;
-          
         }
       } catch (e) {
 

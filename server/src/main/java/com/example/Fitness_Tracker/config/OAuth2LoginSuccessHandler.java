@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -66,8 +67,10 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
 
         System.out.println("HELLO OAUTH: " + email + " : " + name + " : " + username);
 
-        userService.findByEmail(email)
-                .ifPresentOrElse(user -> {
+        User currentUser = null;
+
+        currentUser = userService.findByEmail(email)
+                .map(user -> {
                     String roleName = user.getRoles().stream()
                             .map(role -> role.getName().name())
                             .findFirst()
@@ -83,19 +86,21 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
                             List.of(new SimpleGrantedAuthority(roleName)),
                             oAuth2AuthenticationToken.getAuthorizedClientRegistrationId());
                     SecurityContextHolder.getContext().setAuthentication(securityAuth);
-                }, () -> {
+                    return user;
+                })
+                .orElseGet(() -> {
                     User newUser = new User();
-                    Optional<Role> userRole = roleRepository.findByName(ERole.ROLE_USER); // Fetch existing role
+                    Optional<Role> userRole = roleRepository.findByName(ERole.ROLE_USER);
                     if (userRole.isPresent()) {
-                        newUser.setRoles(java.util.Collections.singleton(userRole.get())); // Set existing role
+                        newUser.setRoles(java.util.Collections.singleton(userRole.get()));
                     } else {
-
                         throw new RuntimeException("Default role not found");
                     }
                     newUser.setEmail(email);
                     newUser.setUsername(username);
                     newUser.setSignUpMethod(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId());
-                    userService.registerUser(newUser);
+                    User savedUser = userService.registerUser(newUser);
+                    
                     DefaultOAuth2User oauthUser = new DefaultOAuth2User(
                             List.of(new SimpleGrantedAuthority(ERole.ROLE_USER.name())),
                             attributes,
@@ -105,23 +110,20 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
                             List.of(new SimpleGrantedAuthority(ERole.ROLE_USER.name())),
                             oAuth2AuthenticationToken.getAuthorizedClientRegistrationId());
                     SecurityContextHolder.getContext().setAuthentication(securityAuth);
+                    return savedUser;
                 });
 
-        // === COOKIE LOGIC (REPLACES JWT TOKEN LOGIC) ===
         System.out.println("OAuth2LoginSuccessHandler: " + username + " : " + email);
 
-        UserDetailsImpl userDetails = new UserDetailsImpl(
-                null,
-                username,
-                email,
-                null,
-                authentication.getAuthorities());
+        UserDetailsImpl userDetails = UserDetailsImpl.build(currentUser);
 
         ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(userDetails);
+        String token = jwtUtils.generateTokenFromUsername(userDetails);
 
-        response.addHeader("Set-Cookie", jwtCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
 
-        String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
+        String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "oauth2/redirect")
+                .fragment("token=" + token)
                 .build().toUriString();
 
         clearAuthenticationAttributes(request);
